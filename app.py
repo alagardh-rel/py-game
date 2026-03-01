@@ -36,14 +36,20 @@ app.secret_key = 'your-secret-key-change-this-in-production-12345'
 # ===========================
 
 # List of words that can be hidden in the grid
+# Curated list of 25 common English words suitable for word search puzzles
 WORD_LIST = [
+    # Tech-related words
     "PYTHON", "FLASK", "JAVASCRIPT", "HTML", "CSS", "DATABASE",
-    "ALGORITHM", "FUNCTION", "VARIABLE", "CONSTANT", "ITERATION",
-    "RECURSION", "ARRAY", "DICTIONARY", "STRING", "BOOLEAN",
-    "INTEGER", "FLOAT", "NETWORK", "SECURITY", "ENCRYPTION",
-    "DISPLAY", "KEYBOARD", "MONITOR", "PROGRAM", "COMPILE",
-    "DEBUG", "ERROR", "WARNING", "EXCEPTION", "LIBRARY"
+    "ALGORITHM", "FUNCTION", "VARIABLE", "ITERATION", "RECURSION",
+    
+    # Computer terms
+    "ARRAY", "DICTIONARY", "STRING", "BOOLEAN", "NETWORK",
+    "SECURITY", "ENCRYPTION", "PROGRAM", "DEBUG", "LIBRARY",
+    
+    # General computing
+    "COMPILE", "ERROR", "DISPLAY", "KEYBOARD", "MONITOR"
 ]
+
 
 # Dictionary to store leaderboard data: {player_name: highest_score}
 leaderboard = {}
@@ -53,41 +59,209 @@ active_games = {}
 
 
 # ===========================
-# UTILITY FUNCTIONS
+# WORD SEARCH GENERATOR CLASS
 # ===========================
 
-def generate_word_grid(size=30, num_words=8):
+class WordSearchGenerator:
     """
-    Generate a random letter grid with hidden words.
+    Generates realistic word search puzzles with hidden words in multiple directions.
+    
+    Features:
+    - Places words horizontally, vertically, and diagonally
+    - Supports forward and backward placement
+    - Detects collisions and avoids overwriting
+    - Fills empty cells with random letters
+    - Tracks all successfully placed words
+    """
+    
+    # Direction vectors: (row_delta, col_delta)
+    # Allows words to be placed in 8 different directions
+    DIRECTIONS = [
+        (0, 1),   # Right (horizontal)
+        (0, -1),  # Left (horizontal reverse)
+        (1, 0),   # Down (vertical)
+        (-1, 0),  # Up (vertical reverse)
+        (1, 1),   # Down-right (diagonal)
+        (-1, -1), # Up-left (diagonal reverse)
+        (1, -1),  # Down-left (diagonal)
+        (-1, 1),  # Up-right (diagonal reverse)
+    ]
+    
+    def __init__(self, size=30, word_list=None):
+        """
+        Initialize the word search generator.
+        
+        Args:
+            size: Grid dimensions (e.g., 30 creates a 30x30 grid)
+            word_list: List of words to place (uses WORD_LIST if None)
+        """
+        self.size = size
+        self.word_list = word_list or WORD_LIST
+        # Initialize grid with None values (unfilled cells)
+        self.grid = [[None for _ in range(size)] for _ in range(size)]
+        self.placed_words = []  # Track successfully placed words
+        self.word_positions = {}  # Store positions of each word for validation
+    
+    def can_place_word(self, word, row, col, direction):
+        """
+        Check if a word can be placed at the given position and direction.
+        
+        A word can be placed if:
+        - All positions are within grid bounds
+        - All positions are either empty (None) or contain the same letter
+        - No collision with existing words (same letter at position = valid overlap)
+        
+        Args:
+            word: Word to place (string)
+            row: Starting row index
+            col: Starting column index
+            direction: Tuple (row_delta, col_delta) indicating direction
+            
+        Returns:
+            bool: True if word can be placed, False otherwise
+        """
+        dr, dc = direction
+        
+        # Check each letter in the word
+        for i, letter in enumerate(word):
+            r = row + (dr * i)
+            c = col + (dc * i)
+            
+            # Check bounds
+            if r < 0 or r >= self.size or c < 0 or c >= self.size:
+                return False
+            
+            # Check if cell is empty or matches the letter
+            cell = self.grid[r][c]
+            if cell is not None and cell != letter:
+                return False  # Collision with different letter
+        
+        return True
+    
+    def place_word(self, word, row, col, direction):
+        """
+        Place a word on the grid at the given position and direction.
+        
+        Args:
+            word: Word to place (string)
+            row: Starting row index
+            col: Starting column index
+            direction: Tuple (row_delta, col_delta) indicating direction
+        """
+        dr, dc = direction
+        positions = []
+        
+        # Place each letter
+        for i, letter in enumerate(word):
+            r = row + (dr * i)
+            c = col + (dc * i)
+            self.grid[r][c] = letter
+            positions.append((r, c))
+        
+        # Track the placed word
+        self.placed_words.append(word)
+        self.word_positions[word] = positions
+    
+    def try_place_word(self, word, max_attempts=50):
+        """
+        Attempt to place a word on the grid with random starting positions.
+        
+        Tries multiple random positions and directions before giving up.
+        
+        Args:
+            word: Word to place (string)
+            max_attempts: Maximum number of random placements to try
+            
+        Returns:
+            bool: True if word was successfully placed, False otherwise
+        """
+        # If word is too long for the grid, skip it
+        if len(word) > self.size:
+            return False
+        
+        # Try random placements
+        for _ in range(max_attempts):
+            # Random starting position
+            row = random.randint(0, self.size - 1)
+            col = random.randint(0, self.size - 1)
+            
+            # Random direction
+            direction = random.choice(self.DIRECTIONS)
+            
+            # Try to place word
+            if self.can_place_word(word, row, col, direction):
+                self.place_word(word, row, col, direction)
+                return True
+        
+        return False
+    
+    def fill_empty_cells(self):
+        """
+        Fill all empty cells (None) with random uppercase letters.
+        
+        This ensures the entire grid is filled with letters, making it
+        look like a proper word search puzzle.
+        """
+        for row in range(self.size):
+            for col in range(self.size):
+                if self.grid[row][col] is None:
+                    self.grid[row][col] = random.choice(string.ascii_uppercase)
+    
+    def generate(self):
+        """
+        Generate a complete word search puzzle.
+        
+        Process:
+        1. Shuffle the word list for randomness
+        2. Try to place each word in random positions/directions
+        3. Fill remaining empty cells with random letters
+        4. Return the final grid and list of placed words
+        
+        Returns:
+            tuple: (grid, placed_words) where:
+                - grid: 2D list of characters
+                - placed_words: List of words successfully placed
+        """
+        # Shuffle word list for varied puzzles
+        words = random.sample(self.word_list, min(len(self.word_list), 20))
+        
+        # Try to place each word
+        for word in words:
+            self.try_place_word(word)
+        
+        # Fill empty cells with random letters
+        self.fill_empty_cells()
+        
+        # Return grid and list of successfully placed words
+        return self.grid, self.placed_words
+
+
+def generate_word_grid(size=30, num_words=None):
+    """
+    Generate a word search puzzle grid with hidden words.
+    
+    This is the main function used by the Flask app to create puzzles.
     
     Args:
-        size: Grid dimensions (30x30)
-        num_words: Number of words to hide in the grid
+        size: Grid dimensions (default 30x30)
+        num_words: Not used (kept for backward compatibility)
         
     Returns:
-        tuple: (grid, hidden_words) where grid is 2D list and hidden_words is list of words
+        tuple: (grid, hidden_words) where:
+            - grid: 2D list of characters representing the puzzle
+            - hidden_words: List of words successfully hidden in the grid
+            
+    Example:
+        >>> grid, words = generate_word_grid(30)
+        >>> len(grid)  # Returns 30
+        >>> len(grid[0])  # Returns 30 (each row has 30 columns)
+        >>> len(words)  # Returns ~15-20 placed words
     """
-    # Create empty grid filled with random letters
-    grid = [[random.choice(string.ascii_uppercase) for _ in range(size)] for _ in range(size)]
+    generator = WordSearchGenerator(size=size, word_list=WORD_LIST)
+    grid, placed_words = generator.generate()
     
-    # Select random words to hide
-    hidden_words = random.sample(WORD_LIST, min(num_words, len(WORD_LIST)))
-    
-    # Place words in the grid (horizontal and vertical for simplicity)
-    for word in hidden_words:
-        # Randomly decide direction (horizontal or vertical)
-        if random.choice([True, False]):  # Horizontal
-            row = random.randint(0, size - 1)
-            col = random.randint(0, size - len(word) - 1)
-            for i, letter in enumerate(word):
-                grid[row][col + i] = letter
-        else:  # Vertical
-            row = random.randint(0, size - len(word) - 1)
-            col = random.randint(0, size - 1)
-            for i, letter in enumerate(word):
-                grid[row + i][col] = letter
-    
-    return grid, hidden_words
+    return grid, placed_words
+
 
 
 def is_valid_word(word, hidden_words):
@@ -217,6 +391,50 @@ def start_game():
             'success': False,
             'message': 'An error occurred. Please try again.'
         }), 500
+
+
+@app.route('/api/get-game-state', methods=['GET'])
+def get_game_state():
+    """
+    API endpoint to fetch the current game state (grid and metadata).
+    
+    Called when the game page loads to get the word search grid to display.
+    Uses Flask session to identify the current player and game.
+    
+    Returns:
+        JSON: {
+            "success": bool,
+            "grid": 2D array of letters (30x30),
+            "time_limit": 60 (seconds),
+            "player_name": str
+        }
+    """
+    # Check if player has an active game in their session
+    if 'game_id' not in session or 'player_name' not in session:
+        return jsonify({
+            'success': False,
+            'message': 'No active game session'
+        }), 401
+    
+    game_id = session['game_id']
+    player_name = session['player_name']
+    
+    # Validate game exists
+    if game_id not in active_games:
+        return jsonify({
+            'success': False,
+            'message': 'Invalid game session'
+        }), 400
+    
+    game = active_games[game_id]
+    
+    return jsonify({
+        'success': True,
+        'grid': game['grid'],
+        'time_limit': 60,
+        'player_name': player_name,
+        'word_count': len(game['hidden_words'])
+    })
 
 
 @app.route('/api/submit-word', methods=['POST'])

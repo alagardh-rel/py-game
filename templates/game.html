@@ -108,9 +108,20 @@
     <script>
         /**
          * ============================
-         * GAME STATE VARIABLES
+         * WORD SEARCH GAME ENGINE
          * ============================
-         * These variables track the current state of the game
+         * This script manages all game logic:
+         * - Fetches the 30x30 word search grid from the server
+         * - Displays the grid (with words hidden horizontally, vertically, diagonally)
+         * - Handles word submission and validation
+         * - Manages 60-second countdown timer
+         * - Tracks score and found words
+         * - Handles game completion
+         */
+
+        /**
+         * GAME STATE VARIABLES
+         * Track the current state of the game
          */
         // Get player name from template variable (passed from Flask backend)
         const templatePlayerName = "{{ player_name | escape }}";
@@ -154,34 +165,43 @@
         });
 
         /**
-         * Load the game grid from the backend
-         * The backend already generated the grid when start-game was called
+         * Load the game grid from the backend server
+         * 
+         * This function calls /api/get-game-state to fetch:
+         * - The 30x30 grid with hidden words
+         * - Game metadata (time limit, word count)
+         * 
+         * The grid is generated server-side using WordSearchGenerator
+         * with words placed in multiple directions (horizontal, vertical, diagonal)
          */
         async function loadGameGrid() {
             try {
-                // In this version, we'll generate a grid on the client side
-                // For production, this could be fetched from backend
-                generateRandomGrid();
-                displayGrid();
+                const response = await fetch('/api/get-game-state', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Store the grid from server
+                    gameState.grid = data.grid;
+                    
+                    // Display the grid
+                    displayGrid();
+                    
+                    // Optional: Show how many words are hidden
+                    console.log(`Grid loaded with ${data.word_count} hidden words`);
+                } else {
+                    alert('Failed to load game grid: ' + data.message);
+                    window.location.href = '/';
+                }
             } catch (error) {
                 console.error('Error loading grid:', error);
-                alert('Failed to load game grid');
-            }
-        }
-
-        /**
-         * Generate a random grid (client-side for demo)
-         * In production, this would come from the server
-         */
-        function generateRandomGrid(size = 30) {
-            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            gameState.grid = [];
-            for (let i = 0; i < size; i++) {
-                let row = [];
-                for (let j = 0; j < size; j++) {
-                    row.push(letters.charAt(Math.floor(Math.random() * letters.length)));
-                }
-                gameState.grid.push(row);
+                alert('Failed to load game grid. Check browser console for details.');
+                window.location.href = '/';
             }
         }
 
