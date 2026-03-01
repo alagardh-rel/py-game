@@ -253,6 +253,16 @@
 
         /**
          * Submit a word to the backend for validation
+         * 
+         * Process:
+         * 1. Get word from input box
+         * 2. Client-side validation (length, duplicates)
+         * 3. Send to /api/submit-word with Flask session auth
+         * 4. Backend validates against hidden word list
+         * 5. If valid: add to found words, update score, show success message
+         * 6. If invalid: show error message, keep input cleared
+         * 
+         * Scoring: 1 point per unique valid word found
          */
         async function submitWord() {
             if (!gameState.gameActive) {
@@ -262,17 +272,19 @@
             const wordInput = document.getElementById('wordInput');
             const word = wordInput.value.trim().toUpperCase();
 
-            // Validation
+            // Validation: word must not be empty
             if (!word) {
                 showMessage('Please enter a word', 'error');
                 return;
             }
 
+            // Validation: minimum length
             if (word.length < 3) {
                 showMessage('Word must be at least 3 letters', 'error');
                 return;
             }
 
+            // Validation: no duplicates (client-side check)
             if (gameState.foundWords.has(word)) {
                 showMessage('Already found that word!', 'warning');
                 wordInput.value = '';
@@ -280,8 +292,8 @@
             }
 
             try {
-                // Send word to backend for validation
-                // Flask session contains the game_id and player_name
+                // Send word to backend for validation against hidden word list
+                // Flask session automatically provides game_id and authentication
                 const response = await fetch('/api/submit-word', {
                     method: 'POST',
                     headers: {
@@ -295,20 +307,23 @@
                 const data = await response.json();
 
                 if (data.valid) {
-                    // Word is valid!
+                    // Word is valid and found in grid!
                     gameState.foundWords.add(word);
                     gameState.score = data.score;
 
-                    // Update UI
+                    // Update UI with new word and updated score
                     addFoundWord(word, data.points);
                     updateScore();
                     showMessage(data.message, 'success');
+                    
+                    // Log for debugging
+                    console.log(`Found word: ${word}, Total found: ${data.total_found}`);
                 } else {
-                    // Word not valid
+                    // Word not valid or not in grid
                     showMessage(data.message, 'error');
                 }
 
-                // Clear input
+                // Clear input for next submission
                 wordInput.value = '';
                 wordInput.focus();
             } catch (error) {
@@ -319,23 +334,44 @@
 
         /**
          * Add a found word to the display list
+         * 
+         * Shows each word the player has found with its point value.
+         * Points are added to the top of the list (most recent first).
+         * Each valid word = 1 point.
+         * 
+         * Args:
+         *   word: The word found (string)
+         *   points: Points awarded for this word (number, always 1)
          */
         function addFoundWord(word, points) {
             const list = document.getElementById('foundWordsList');
 
-            // Remove placeholder if this is the first word
+            // Remove placeholder message if this is the first word
             if (gameState.foundWords.size === 1) {
                 list.innerHTML = '';
             }
 
+            // Create list item for the word
             const li = document.createElement('li');
             li.className = 'found-word-item';
-            li.innerHTML = `<span class="word">${escapeHtml(word)}</span><span class="points">+${points}</span>`;
-            list.appendChild(li);
+            
+            // Display word and points
+            // Each word is worth 1 point
+            li.innerHTML = `
+                <span class="word">${escapeHtml(word)}</span>
+                <span class="points">+${points}pt</span>
+            `;
+            
+            // Add to top of list (prepend instead of append)
+            list.insertBefore(li, list.firstChild);
         }
 
         /**
          * Update the score display
+         * 
+         * Updates:
+         * - Current score in header
+         * - Total word count
          */
         function updateScore() {
             document.getElementById('score').textContent = gameState.score;

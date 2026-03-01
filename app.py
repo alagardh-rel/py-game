@@ -483,28 +483,31 @@ def submit_word():
     if not word or len(word) < 3:
         return jsonify({
             'valid': False,
-            'message': 'Word must be at least 3 letters'
+            'message': 'Word must be at least 3 letters',
+            'score': game['score']
         })
     
     # Check if word was already found
     if word in game['found_words']:
         return jsonify({
             'valid': False,
-            'message': 'Word already found!'
+            'message': 'Word already found!',
+            'score': game['score']
         })
     
     # Check if word is in hidden words
     if is_valid_word(word, game['hidden_words']):
         game['found_words'].add(word)
-        # Score: 1 point per letter in the word
-        points = len(word)
+        # Score: 1 point per valid unique word found
+        points = 1
         game['score'] += points
         
         return jsonify({
             'valid': True,
             'points': points,
             'score': game['score'],
-            'message': f"✓ Correct! +{points} points"
+            'message': f"✓ Correct! +{points} point",
+            'total_found': len(game['found_words'])
         })
     else:
         return jsonify({
