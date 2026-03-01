@@ -1,0 +1,696 @@
+/**
+ * Word Search Game - Main Stylesheet
+ * ==================================
+ * This file contains all CSS styling for the web application.
+ * 
+ * Organization:
+ * 1. Global styles and resets
+ * 2. Color variables and typography
+ * 3. Layout components (header, footer, containers)
+ * 4. Form styles
+ * 5. Game-specific styles (grid, timer, etc.)
+ * 6. Responsive design (media queries)
+ */
+
+/* ===========================
+   GLOBAL STYLES & RESETS
+   =========================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* ===========================
+   COLOR PALETTE
+   =========================== */
+
+:root {
+    --primary-color: #667eea;
+    --primary-dark: #5568d3;
+    --primary-light: #8b9ff0;
+    --secondary-color: #764ba2;
+    --success-color: #48bb78;
+    --warning-color: #f6ad55;
+    --danger-color: #f56565;
+    --error-color: #e53e3e;
+    --light-bg: #f7fafc;
+    --gray-100: #edf2f7;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e0;
+    --gray-500: #718096;
+    --gray-700: #4a5568;
+    --text-dark: #2d3748;
+    --white: #ffffff;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* ===========================
+   CONTAINER LAYOUT
+   =========================== */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 0;
+}
+
+/* ===========================
+   HEADER & FOOTER
+   =========================== */
+
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px 20px;
+    text-align: center;
+    border-radius: 0 0 12px 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.header .subtitle {
+    color: var(--gray-700);
+    font-size: 1.1rem;
+    font-weight: 300;
+}
+
+.game-header {
+    background: var(--white);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.game-header h1 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.game-info {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.info-box {
+    display: flex;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.info-box .label {
+    color: var(--gray-700);
+}
+
+.info-box span:last-child {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+}
+
+#timer.warning {
+    color: var(--danger-color);
+    animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.footer {
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--white);
+    text-align: center;
+    padding: 20px;
+    margin-top: auto;
+}
+
+/* ===========================
+   CARD COMPONENT
+   =========================== */
+
+.card {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+.card h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+.card h3 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+/* ===========================
+   FORM STYLES
+   =========================== */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--gray-200);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+input[type="text"]::placeholder {
+    color: var(--gray-300);
+}
+
+/* ===========================
+   BUTTON STYLES
+   =========================== */
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: var(--white);
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: var(--gray-300);
+    color: var(--text-dark);
+}
+
+.btn-secondary:hover {
+    background: var(--gray-500);
+    color: var(--white);
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: var(--white);
+    width: 100%;
+}
+
+.btn-danger:hover {
+    background: var(--error-color);
+    transform: translateY(-2px);
+}
+
+.button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.button-group .btn {
+    margin: 0;
+}
+
+/* ===========================
+   HOME PAGE STYLES
+   =========================== */
+
+.form-section,
+.instructions-section,
+.leaderboard-section {
+    margin-bottom: 30px;
+}
+
+.instructions-section ol {
+    margin-left: 20px;
+    color: var(--text-dark);
+}
+
+.instructions-section li {
+    margin-bottom: 12px;
+    line-height: 1.8;
+}
+
+/* Leaderboard Table */
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard-table thead {
+    background: var(--light-bg);
+}
+
+.leaderboard-table th {
+    padding: 12px;
+    text-align: left;
+    color: var(--primary-color);
+    font-weight: 600;
+    border-bottom: 2px solid var(--gray-200);
+}
+
+.leaderboard-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.leaderboard-table tbody tr:hover {
+    background: var(--light-bg);
+}
+
+.leaderboard-table .rank {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.leaderboard-table .player {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.leaderboard-table .score {
+    color: var(--success-color);
+    font-weight: 700;
+}
+
+/* ===========================
+   GAME PAGE STYLES
+   =========================== */
+
+.game-main {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Word Grid */
+.game-grid-section {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+}
+
+.game-grid-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.word-grid {
+    display: grid;
+    grid-template-columns: repeat(30, 1fr);
+    gap: 2px;
+    background: var(--gray-200);
+    padding: 2px;
+    border-radius: 4px;
+    flex: 1;
+    overflow-y: auto;
+    align-content: start;
+}
+
+.grid-row {
+    display: contents;
+}
+
+.grid-cell {
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    cursor: default;
+    user-select: none;
+    min-height: 24px;
+}
+
+.grid-cell:hover {
+    background: var(--light-bg);
+}
+
+/* Game Controls Section */
+.game-controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+}
+
+.input-card,
+.words-card,
+.message-card {
+    padding: 20px;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.input-card h3,
+.words-card h3 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
+}
+
+#wordInput {
+    margin-bottom: 10px;
+}
+
+.found-words-list {
+    list-style: none;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.found-words-list .placeholder {
+    color: var(--gray-500);
+    font-style: italic;
+    padding: 10px 0;
+}
+
+.found-word-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.found-word-item:last-child {
+    border-bottom: none;
+}
+
+.found-word-item .word {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-family: 'Courier New', monospace;
+}
+
+.found-word-item .points {
+    color: var(--success-color);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* Message Box */
+.message-card {
+    padding: 15px 20px;
+}
+
+.message {
+    margin: 0;
+    padding: 10px;
+    border-radius: 4px;
+    background: var(--light-bg);
+    color: var(--text-dark);
+    border-left: 4px solid var(--gray-300);
+}
+
+.message-success {
+    background: #c6f6d5;
+    color: #22543d;
+    border-left-color: var(--success-color);
+}
+
+.message-error {
+    background: #fed7d7;
+    color: #742a2a;
+    border-left-color: var(--danger-color);
+}
+
+.message-warning {
+    background: #feebc8;
+    color: #7c2d12;
+    border-left-color: var(--warning-color);
+}
+
+/* ===========================
+   MODAL STYLES
+   =========================== */
+
+.modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    max-width: 500px;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-content h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 2rem;
+}
+
+.score-summary {
+    background: var(--light-bg);
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.score-summary p {
+    margin: 10px 0;
+    font-size: 1.1rem;
+}
+
+.score-summary strong {
+    color: var(--primary-color);
+    font-size: 1.3rem;
+}
+
+/* ===========================
+   RESPONSIVE DESIGN
+   =========================== */
+
+@media (max-width: 1024px) {
+    .game-main {
+        grid-template-columns: 1fr;
+    }
+
+    .word-grid {
+        grid-template-columns: repeat(20, 1fr);
+        max-height: 400px;
+    }
+
+    .game-info {
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .game-header {
+        padding: 15px;
+    }
+
+    .game-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .word-grid {
+        grid-template-columns: repeat(15, 1fr);
+    }
+
+    .button-group {
+        grid-template-columns: 1fr;
+    }
+
+    .leaderboard-table {
+        font-size: 0.9rem;
+    }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+
+    html {
+        font-size: 14px;
+    }
+
+    .header {
+        padding: 20px 10px;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .card {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .word-grid {
+        grid-template-columns: repeat(10, 1fr);
+        gap: 1px;
+    }
+
+    .grid-cell {
+        font-size: 0.7rem;
+        min-height: 20px;
+    }
+
+    .game-main {
+        gap: 10px;
+    }
+
+    .game-controls-section {
+        gap: 10px;
+    }
+
+    .input-card,
+    .words-card,
+    .message-card {
+        padding: 15px;
+    }
+
+    .modal-content {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* ===========================
+   UTILITY CLASSES
+   =========================== */
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: var(--gray-500);
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}

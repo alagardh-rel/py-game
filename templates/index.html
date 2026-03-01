@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 
+    Word Search Game - Home Page
+    ============================
+    This is the landing page where users enter their name and start a new game.
+    
+    Purpose:
+    - Provides a welcome message
+    - Collects player name via form
+    - Displays leaderboard
+    - Navigates to game page
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>🔍 Word Search Game</h1>
+            <p class="subtitle">Find hidden words in 60 seconds!</p>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Player Entry Form -->
+            <section class="card form-section">
+                <h2>Get Started</h2>
+                <form id="nameForm">
+                    <div class="form-group">
+                        <label for="playerName">Enter your name:</label>
+                        <input 
+                            type="text" 
+                            id="playerName" 
+                            name="playerName" 
+                            placeholder="Your name here..." 
+                            required
+                            maxlength="50"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary">Start Game</button>
+                </form>
+            </section>
+
+            <!-- Game Instructions -->
+            <section class="card instructions-section">
+                <h2>How to Play</h2>
+                <ol>
+                    <li>Enter your name and click <strong>Start Game</strong></li>
+                    <li>You'll see a 30x30 grid of letters</li>
+                    <li>Find hidden English words in the grid</li>
+                    <li>Type words in the search box (minimum 3 letters)</li>
+                    <li>Score 1 point per letter found</li>
+                    <li>You have <strong>60 seconds</strong> to find as many words as possible</li>
+                    <li>Submit your score to compete on the leaderboard</li>
+                </ol>
+            </section>
+
+            <!-- Leaderboard Section -->
+            <section class="card leaderboard-section">
+                <h2>🏆 Leaderboard</h2>
+                <div id="leaderboard" class="leaderboard">
+                    <p>Loading leaderboard...</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2026 Word Search Game | Built with Flask & JavaScript</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        /**
+         * FORM SUBMISSION HANDLER
+         * When user clicks "Start Game", this function:
+         * 1. Gets the player name
+         * 2. Validates the input
+         * 3. Sends it to the backend via /api/start-game
+         * 4. Backend stores player_name in Flask session
+         * 5. Redirects to game page if successful
+         */
+        document.getElementById('nameForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const playerName = document.getElementById('playerName').value.trim();
+            const submitBtn = document.querySelector('.btn-primary');
+            
+            // Client-side validation
+            if (!playerName || playerName.length < 2) {
+                alert('✗ Please enter a name (at least 2 characters)');
+                return;
+            }
+
+            if (playerName.length > 50) {
+                alert('✗ Name is too long (max 50 characters)');
+                return;
+            }
+
+            try {
+                // Disable button to prevent double-submission
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Starting...';
+
+                // Send player name to backend to start game
+                const response = await fetch('/api/start-game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        player_name: playerName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Flask session was set by backend
+                    // Redirect to game page immediately
+                    window.location.href = data.redirect_url || '/game';
+                } else {
+                    // Show error message from backend
+                    alert(`✗ ${data.message || 'Error starting game. Please try again.'}`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Start Game';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('✗ Failed to start game. Check browser console for details.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Start Game';
+            }
+        });
+
+        /**
+         * LOAD LEADERBOARD
+         * This function fetches and displays the current leaderboard
+         */
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch('/api/leaderboard');
+                const leaderboardData = await response.json();
+
+                const leaderboardDiv = document.getElementById('leaderboard');
+
+                if (leaderboardData.length === 0) {
+                    leaderboardDiv.innerHTML = '<p>No scores yet. Be the first to play!</p>';
+                    return;
+                }
+
+                // Build leaderboard HTML table
+                let html = '<table class="leaderboard-table"><thead><tr><th>Rank</th><th>Player</th><th>Score</th></tr></thead><tbody>';
+                
+                leaderboardData.slice(0, 10).forEach(entry => {
+                    html += `
+                        <tr>
+                            <td class="rank">${entry.rank}</td>
+                            <td class="player">${escapeHtml(entry.name)}</td>
+                            <td class="score">${entry.score}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                leaderboardDiv.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading leaderboard:', error);
+                document.getElementById('leaderboard').innerHTML = '<p>Unable to load leaderboard</p>';
+            }
+        }
+
+        /**
+         * SECURITY UTILITY
+         * Escapes HTML special characters to prevent XSS attacks
+         */
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Load leaderboard when page loads
+        loadLeaderboard();
+
+        // Refresh leaderboard every 10 seconds
+        setInterval(loadLeaderboard, 10000);
+    </script>
+</body>
+</html>
